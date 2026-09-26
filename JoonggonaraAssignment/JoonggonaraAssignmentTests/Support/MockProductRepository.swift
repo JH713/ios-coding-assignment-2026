@@ -14,6 +14,7 @@ final class MockProductRepository: ProductRepository {
         var error: Error?
         var holdsRequests = false
         var requests: [Request] = []
+        var requestedProductIDs: [Int] = []
         var pending: [CheckedContinuation<Void, Never>] = []
     }
 
@@ -36,6 +37,10 @@ final class MockProductRepository: ProductRepository {
 
     var requests: [Request] {
         state.withLock { $0.requests }
+    }
+
+    var requestedProductIDs: [Int] {
+        state.withLock { $0.requestedProductIDs }
     }
 
     func fetchProducts(skip: Int, limit: Int) async throws -> ProductPage {
@@ -61,6 +66,7 @@ final class MockProductRepository: ProductRepository {
 
     func fetchProduct(id: Int) async throws -> Product {
         let result: Result<Product, Error> = state.withLock {
+            $0.requestedProductIDs.append(id)
             if let error = $0.error { return .failure(error) }
             guard let product = $0.pages.values.flatMap(\.items).first(where: { $0.id == id }) else {
                 return .failure(NotFound())
