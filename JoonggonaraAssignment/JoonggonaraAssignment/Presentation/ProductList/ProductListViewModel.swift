@@ -52,7 +52,10 @@ final class ProductListViewModel {
             total = page.total
             state = .loaded(page.items)
         } catch {
-            guard !Task.isCancelled else { return }
+            if Task.isCancelled {
+                state = .idle
+                return
+            }
             state = .failed(error)
         }
     }

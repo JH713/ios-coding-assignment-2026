@@ -31,7 +31,10 @@ final class ProductDetailViewModel {
         do {
             state = .loaded(try await repository.fetchProduct(id: productID))
         } catch {
-            guard !Task.isCancelled else { return }
+            if Task.isCancelled {
+                state = .idle
+                return
+            }
             state = .failed(error)
         }
     }
