@@ -1,6 +1,6 @@
 @testable import JoonggonaraAssignment
 
-final class InMemoryFavoriteRepository: FavoriteRepository {
+final class MockFavoriteRepository: FavoriteRepository {
     private(set) var savedIDs: [Set<Int>] = []
     private var ids: Set<Int>
 
