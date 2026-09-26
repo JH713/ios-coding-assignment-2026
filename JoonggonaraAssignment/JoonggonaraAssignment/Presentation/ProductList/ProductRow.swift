@@ -7,12 +7,8 @@ struct ProductRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            AsyncImage(url: product.thumbnailURL) { image in
-                image.resizable().scaledToFill()
-            } placeholder: {
-                Color.secondary.opacity(0.2)
-            }
-            .frame(width: 72, height: 72)
+            RemoteImage(url: product.thumbnailURL)
+                .frame(width: 72, height: 72)
             .clipShape(RoundedRectangle(cornerRadius: 8))
 
             VStack(alignment: .leading, spacing: 4) {

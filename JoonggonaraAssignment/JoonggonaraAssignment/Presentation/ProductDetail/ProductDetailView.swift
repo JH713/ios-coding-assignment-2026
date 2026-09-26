@@ -74,12 +74,8 @@ struct ProductDetailView: View {
                     LabeledContent("바코드", value: product.meta.barcode)
                     if let qrCodeURL = product.meta.qrCodeURL {
                         LabeledContent("QR") {
-                            AsyncImage(url: qrCodeURL) { image in
-                                image.resizable().scaledToFit()
-                            } placeholder: {
-                                ProgressView()
-                            }
-                            .frame(width: 80, height: 80)
+                            RemoteImage(url: qrCodeURL, contentMode: .fit)
+                                .frame(width: 80, height: 80)
                         }
                     }
                 }

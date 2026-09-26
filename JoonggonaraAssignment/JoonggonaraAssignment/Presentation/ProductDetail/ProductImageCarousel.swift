@@ -6,11 +6,7 @@ struct ProductImageCarousel: View {
     var body: some View {
         TabView {
             ForEach(urls, id: \.self) { url in
-                AsyncImage(url: url) { image in
-                    image.resizable().scaledToFit()
-                } placeholder: {
-                    ProgressView()
-                }
+                RemoteImage(url: url, contentMode: .fit)
             }
         }
         .tabViewStyle(.page)

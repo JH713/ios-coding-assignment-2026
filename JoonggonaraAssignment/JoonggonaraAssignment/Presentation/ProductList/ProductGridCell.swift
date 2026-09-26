@@ -10,11 +10,7 @@ struct ProductGridCell: View {
             Color.clear
                 .aspectRatio(1, contentMode: .fit)
                 .overlay {
-                    AsyncImage(url: product.thumbnailURL) { image in
-                        image.resizable().scaledToFill()
-                    } placeholder: {
-                        Color.secondary.opacity(0.2)
-                    }
+                    RemoteImage(url: product.thumbnailURL)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .overlay(alignment: .topTrailing) {
