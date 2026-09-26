@@ -9,7 +9,7 @@ struct ProductRow: View {
         HStack(spacing: 12) {
             RemoteImage(url: product.thumbnailURL)
                 .frame(width: 72, height: 72)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(product.title)

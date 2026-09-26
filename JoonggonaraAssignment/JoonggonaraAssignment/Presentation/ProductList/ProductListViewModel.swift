@@ -6,7 +6,7 @@ final class ProductListViewModel {
     private(set) var isLoadingMore = false
     private(set) var loadMoreError: Error?
     private(set) var layout: ProductListLayout = .list
-    
+
     private let repository: any ProductRepository
     private let favoriteStore: FavoriteStore
     private let pageSize: Int
