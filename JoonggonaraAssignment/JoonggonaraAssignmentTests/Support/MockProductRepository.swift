@@ -56,6 +56,8 @@ final class MockProductRepository: ProductRepository {
             }
         }
 
+        try Task.checkCancellation()
+
         let result: Result<ProductPage, Error> = state.withLock {
             if let error = $0.error { return .failure(error) }
             guard let page = $0.pages[skip] else { return .failure(NotFound()) }
@@ -65,8 +67,20 @@ final class MockProductRepository: ProductRepository {
     }
 
     func fetchProduct(id: Int) async throws -> Product {
+        await withCheckedContinuation { continuation in
+            let resumesImmediately = state.withLock {
+                $0.requestedProductIDs.append(id)
+                guard $0.holdsRequests else { return true }
+                $0.pending.append(continuation)
+                return false
+            }
+            if resumesImmediately {
+                continuation.resume()
+            }
+        }
+        try Task.checkCancellation()
+
         let result: Result<Product, Error> = state.withLock {
-            $0.requestedProductIDs.append(id)
             if let error = $0.error { return .failure(error) }
             guard let product = $0.pages.values.flatMap(\.items).first(where: { $0.id == id }) else {
                 return .failure(NotFound())

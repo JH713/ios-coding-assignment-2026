@@ -38,6 +38,33 @@ struct ProductDetailViewModelTests {
         }
     }
 
+    @Test("상세 요청을 취소하면 idle로 복구되고 다시 불러올 수 있다")
+    func reloadsAfterCancellation() async {
+        repository.pages[0] = ProductPage(items: [.stub(id: 7, title: "Detail")], total: 1, skip: 0, limit: 1)
+        let viewModel = makeViewModel(productID: 7)
+        repository.holdsRequests = true
+
+        let inFlight = Task { await viewModel.loadIfNeeded() }
+        while repository.requestedProductIDs.isEmpty { await Task.yield() }
+        inFlight.cancel()
+        repository.releaseHeldRequests()
+        await inFlight.value
+
+        guard case .idle = viewModel.state else {
+            Issue.record("취소 후 idle 상태로 복구되지 않음")
+            return
+        }
+
+        await viewModel.loadIfNeeded()
+        #expect(repository.requestedProductIDs == [7, 7])
+        guard case .loaded(let product) = viewModel.state else {
+            Issue.record("재요청 후 loaded 상태가 아님")
+            return
+        }
+        #expect(product.id == 7)
+        #expect(product.title == "Detail")
+    }
+
     @Test("요청이 실패하면 failed 상태가 된다")
     func loadFailure() async {
         repository.error = SomeError()

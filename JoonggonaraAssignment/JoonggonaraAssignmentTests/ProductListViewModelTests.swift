@@ -40,6 +40,28 @@ struct ProductListViewModelTests {
         #expect(repository.requests == [.init(skip: 0, limit: 3)])
     }
 
+    @Test("첫 페이지 요청을 취소하면 idle로 복구되고 다시 불러올 수 있다")
+    func reloadsAfterCancellation() async {
+        givenTwoPages()
+        let viewModel = makeViewModel()
+        repository.holdsRequests = true
+
+        let inFlight = Task { await viewModel.loadIfNeeded() }
+        while repository.requests.isEmpty { await Task.yield() }
+        inFlight.cancel()
+        repository.releaseHeldRequests()
+        await inFlight.value
+
+        guard case .idle = viewModel.state else {
+            Issue.record("취소 후 idle 상태로 복구되지 않음")
+            return
+        }
+
+        await viewModel.loadIfNeeded()
+        #expect(loadedIDs(viewModel) == [1, 2, 3])
+        #expect(repository.requests == [.init(skip: 0, limit: 3), .init(skip: 0, limit: 3)])
+    }
+
     @Test("첫 페이지 요청이 실패하면 failed 상태가 된다")
     func loadFailure() async {
         repository.error = SomeError()
