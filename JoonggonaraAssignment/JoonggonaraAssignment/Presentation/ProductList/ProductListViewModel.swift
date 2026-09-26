@@ -18,6 +18,10 @@ final class ProductListViewModel {
         self.pageSize = pageSize
     }
 
+    func detailViewModel(for productID: Int) -> ProductDetailViewModel {
+        ProductDetailViewModel(productID: productID, repository: repository, favoriteStore: favoriteStore)
+    }
+
     func toggleLayout() {
         layout = layout == .list ? .grid : .list
     }

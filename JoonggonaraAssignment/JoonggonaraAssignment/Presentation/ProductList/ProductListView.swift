@@ -20,6 +20,9 @@ struct ProductListView: View {
                 .accessibilityLabel(viewModel.layout == .list ? "2열로 보기" : "1열로 보기")
             }
             .task { await viewModel.loadIfNeeded() }
+            .navigationDestination(for: Int.self) { productID in
+                ProductDetailView(viewModel: viewModel.detailViewModel(for: productID))
+            }
     }
 
     @ViewBuilder
@@ -53,11 +56,15 @@ struct ProductListView: View {
     private func listContent(_ products: [Product]) -> some View {
         LazyVStack(spacing: 0) {
             ForEach(products) { product in
-                ProductRow(
-                    product: product,
-                    isFavorite: viewModel.isFavorite(product.id),
-                    onToggleFavorite: { viewModel.toggleFavorite(product.id) }
-                )
+                NavigationLink(value: product.id) {
+                    ProductRow(
+                        product: product,
+                        isFavorite: viewModel.isFavorite(product.id),
+                        onToggleFavorite: { viewModel.toggleFavorite(product.id) }
+                    )
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
                 .onAppear { Task { await viewModel.loadMoreIfNeeded(after: product) } }
                 Divider()
             }
@@ -68,11 +75,15 @@ struct ProductListView: View {
     private func gridContent(_ products: [Product]) -> some View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 16) {
             ForEach(products) { product in
-                ProductGridCell(
-                    product: product,
-                    isFavorite: viewModel.isFavorite(product.id),
-                    onToggleFavorite: { viewModel.toggleFavorite(product.id) }
-                )
+                NavigationLink(value: product.id) {
+                    ProductGridCell(
+                        product: product,
+                        isFavorite: viewModel.isFavorite(product.id),
+                        onToggleFavorite: { viewModel.toggleFavorite(product.id) }
+                    )
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
                 .onAppear { Task { await viewModel.loadMoreIfNeeded(after: product) } }
             }
         }
