@@ -5,6 +5,7 @@ final class ProductListViewModel {
     private(set) var state: LoadState<[Product]> = .idle
     private(set) var isLoadingMore = false
     private(set) var loadMoreError: Error?
+    private(set) var layout: ProductListLayout = .list
     
     private let repository: any ProductRepository
     private let favoriteStore: FavoriteStore
@@ -15,6 +16,10 @@ final class ProductListViewModel {
         self.repository = repository
         self.favoriteStore = favoriteStore
         self.pageSize = pageSize
+    }
+
+    func toggleLayout() {
+        layout = layout == .list ? .grid : .list
     }
 
     func isFavorite(_ id: Int) -> Bool {
@@ -46,6 +51,11 @@ final class ProductListViewModel {
             guard !Task.isCancelled else { return }
             state = .failed(error)
         }
+    }
+
+    func loadMoreIfNeeded(after product: Product) async {
+        guard case .loaded(let items) = state, product.id == items.last?.id else { return }
+        await loadMore()
     }
 
     func loadMore() async {

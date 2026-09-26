@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ProductListView: View {
     @State private var viewModel: ProductListViewModel
+    @State private var scrolledID: Int?
 
     init(viewModel: ProductListViewModel) {
         _viewModel = State(initialValue: viewModel)
@@ -10,6 +11,14 @@ struct ProductListView: View {
     var body: some View {
         content
             .navigationTitle("상품")
+            .toolbar {
+                Button {
+                    viewModel.toggleLayout()
+                } label: {
+                    Image(systemName: viewModel.layout == .list ? "square.grid.2x2" : "list.bullet")
+                }
+                .accessibilityLabel(viewModel.layout == .list ? "2열로 보기" : "1열로 보기")
+            }
             .task { await viewModel.loadIfNeeded() }
     }
 
@@ -27,23 +36,47 @@ struct ProductListView: View {
                 Button("다시 시도") { Task { await viewModel.load() } }
             }
         case .loaded(let products):
-            List {
-                ForEach(products) { product in
-                    ProductRow(
-                        product: product,
-                        isFavorite: viewModel.isFavorite(product.id),
-                        onToggleFavorite: { viewModel.toggleFavorite(product.id) }
-                    )
-                        .onAppear {
-                            if product.id == products.last?.id {
-                                Task { await viewModel.loadMore() }
-                            }
-                        }
+            ScrollView {
+                switch viewModel.layout {
+                case .list:
+                    listContent(products)
+                case .grid:
+                    gridContent(products)
                 }
                 footer
             }
-            .listStyle(.plain)
+            .contentMargins(.horizontal, 16, for: .scrollContent)
+            .scrollPosition(id: $scrolledID, anchor: .top)
         }
+    }
+
+    private func listContent(_ products: [Product]) -> some View {
+        LazyVStack(spacing: 0) {
+            ForEach(products) { product in
+                ProductRow(
+                    product: product,
+                    isFavorite: viewModel.isFavorite(product.id),
+                    onToggleFavorite: { viewModel.toggleFavorite(product.id) }
+                )
+                .onAppear { Task { await viewModel.loadMoreIfNeeded(after: product) } }
+                Divider()
+            }
+        }
+        .scrollTargetLayout()
+    }
+
+    private func gridContent(_ products: [Product]) -> some View {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 16) {
+            ForEach(products) { product in
+                ProductGridCell(
+                    product: product,
+                    isFavorite: viewModel.isFavorite(product.id),
+                    onToggleFavorite: { viewModel.toggleFavorite(product.id) }
+                )
+                .onAppear { Task { await viewModel.loadMoreIfNeeded(after: product) } }
+            }
+        }
+        .scrollTargetLayout()
     }
 
     @ViewBuilder
@@ -51,11 +84,13 @@ struct ProductListView: View {
         if viewModel.isLoadingMore {
             ProgressView()
                 .frame(maxWidth: .infinity)
+                .padding()
         } else if viewModel.loadMoreError != nil {
             Button("더 불러오지 못했습니다. 다시 시도") {
                 Task { await viewModel.loadMore() }
             }
             .frame(maxWidth: .infinity)
+            .padding()
         }
     }
 }

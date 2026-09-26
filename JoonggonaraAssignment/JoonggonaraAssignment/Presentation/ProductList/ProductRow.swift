@@ -27,6 +27,6 @@ struct ProductRow: View {
 
             FavoriteButton(isFavorite: isFavorite, action: onToggleFavorite)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 12)
     }
 }

@@ -61,6 +61,18 @@ struct ProductListViewModelTests {
         #expect(repository.requests == [.init(skip: 0, limit: 3), .init(skip: 3, limit: 3)])
     }
 
+    @Test("마지막 상품이 나타났을 때만 다음 페이지를 요청한다")
+    func loadMoreIfNeededOnlyAfterLastItem() async {
+        givenTwoPages()
+        let viewModel = makeViewModel()
+        await viewModel.load()
+        await viewModel.loadMoreIfNeeded(after: .stub(id: 2))
+        #expect(repository.requests.count == 1)
+        await viewModel.loadMoreIfNeeded(after: .stub(id: 3))
+        #expect(repository.requests.count == 2)
+        #expect(loadedIDs(viewModel) == [1, 2, 3, 4, 5])
+    }
+
     @Test("마지막 페이지에서는 더 요청하지 않는다")
     func loadMoreStopsAtLastPage() async {
         givenTwoPages()
@@ -106,6 +118,16 @@ struct ProductListViewModelTests {
         await viewModel.loadMore()
         #expect(loadedIDs(viewModel) == [1, 2, 3, 4, 5])
         #expect(viewModel.loadMoreError == nil)
+    }
+
+    @Test("보기 방식은 list로 시작하고 토글할 때마다 grid와 번갈아 바뀐다")
+    func toggleLayoutAlternates() {
+        let viewModel = makeViewModel()
+        #expect(viewModel.layout == .list)
+        viewModel.toggleLayout()
+        #expect(viewModel.layout == .grid)
+        viewModel.toggleLayout()
+        #expect(viewModel.layout == .list)
     }
 
     @Test("찜 여부와 토글은 FavoriteStore에 위임한다")
